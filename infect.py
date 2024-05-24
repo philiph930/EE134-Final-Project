@@ -9,8 +9,28 @@ def infect_step(G,p1,individuals,N):
     '''
 
     ###################################################
-    '''your code here'''
+    
+    individuals_updated = individuals
 
+    original_infected = []
+    for i in range(N):
+        if individuals[i] == 1:
+            original_infected.append(i)
+
+    for individual in original_infected:
+        neighbors = []
+        node_num = 0
+        for edge in G[individual,:]:
+            if edge == 1:
+                neighbors.append(node_num)
+            node_num = node_num + 1
+
+        for neighbor in neighbors:
+            if individuals_updated[neighbor] == 1:
+                continue
+
+            if np.random.rand() < p1:
+                individuals_updated[neighbor] = 1
                         
     ###################################################
     return individuals_updated
@@ -29,7 +49,12 @@ def infect(G,p0,p1,time_steps):
     N = G.shape[0]
     individuals = np.zeros(N)
     ###################################################
-    '''your code here'''
+    for i in range(N):
+        if np.random.rand() < p0:
+            individuals[i] = 1
+
+    for i in range(time_steps):
+        individuals = infect_step(G, p1, individuals, N)
 
     ###################################################
 
