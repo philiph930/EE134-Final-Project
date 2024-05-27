@@ -105,8 +105,30 @@ def Qtesting1(s):
     num_tests = 0
     stages = 0
     ###################################################
-    '''your code here'''
+    N = len(s)
+    infected = []
 
+    def adaptive_test(start, end):
+        nonlocal num_tests, stages
+        if start == end:
+            if s[start] == 1:
+                infected.append(start)
+            return
+
+        mid = (start + end) // 2
+        left_count = sum(s[start:mid + 1])
+        right_count = sum(s[mid + 1:end + 1])
+
+        if left_count > 0:
+            stages += 1
+            adaptive_test(start, mid)
+        if right_count > 0:
+            stages += 1
+            adaptive_test(mid + 1, end)
+
+        num_tests += 1
+
+    adaptive_test(0, N - 1)
     ###################################################
 
 
@@ -121,7 +143,30 @@ def Qtesting2(s):
     num_tests = 0
     stages = 0
     ###################################################
-    '''your code here'''
+    N = len(s)
+    infected = []
+
+    def adaptive_test(start, end):
+        nonlocal num_tests, stages
+        if start == end:
+            if s[start] == 1:
+                infected.append(start)
+            return
+
+        mid = (start + end) // 2
+        left_count = sum(s[start:mid+1])
+        right_count = sum(s[mid+1:end+1])
+
+        if left_count > 0:
+            stages += 1
+            adaptive_test(start, mid)
+        if right_count > 0:
+            stages += 1
+            adaptive_test(mid+1, end)
+
+        num_tests += 1
+
+    adaptive_test(0, N-1)
 
     ###################################################
 
@@ -139,7 +184,28 @@ def Qtesting1_comm_aware(s,communities):
     num_tests = 0
     stages = 0
     ###################################################
-    '''your code here'''
+    def adaptive_test(start, end):
+        nonlocal num_tests, stages
+        if start == end:
+            if s[start] == 1:
+                return
+            return
+
+        mid = (start + end) // 2
+        left_count = sum(s[start:mid+1])
+        right_count = sum(s[mid+1:end+1])
+
+        if left_count > 0:
+            stages += 1
+            adaptive_test(start, mid)
+        if right_count > 0:
+            stages += 1
+            adaptive_test(mid+1, end)
+
+        num_tests += 1
+
+    for community in communities:
+        adaptive_test(community[0], community[-1])
 
     ###################################################
 
@@ -155,10 +221,30 @@ def Qtesting2_comm_aware(s,communities):
     num_tests = 0
     stages = 0
     ###################################################
-    '''your code here'''
+    def adaptive_test(start, end):
+        nonlocal num_tests, stages
+        if start == end:
+            if s[start] == 1:
+                return
+            return
+
+        mid = (start + end) // 2
+        left_count = sum(s[start:mid+1])
+        right_count = sum(s[mid+1:end+1])
+
+        if left_count > 0:
+            stages += 1
+            adaptive_test(start, mid)
+        if right_count > 0:
+            stages += 1
+            adaptive_test(mid+1, end)
+
+        num_tests += 1
+
+    for community in communities:
+        adaptive_test(community[0], community[-1])
 
     ###################################################
-
 
 
     return num_tests,stages
