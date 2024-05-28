@@ -99,152 +99,34 @@ def diag_splitting(s):
     return num_tests,stages
 
 def Qtesting1(s):
-    '''
-    s(np.array): binary string of infection status
-    '''
     num_tests = 0
     stages = 0
-    ###################################################
-    N = len(s)
-    infected = []
-
-    def adaptive_test(start, end):
-        nonlocal num_tests, stages
-        if start == end:
-            if s[start] == 1:
-                infected.append(start)
-            return
-
-        mid = (start + end) // 2
-        left_count = sum(s[start:mid + 1])
-        right_count = sum(s[mid + 1:end + 1])
-
-        if left_count > 0:
-            stages += 1
-            adaptive_test(start, mid)
-        if right_count > 0:
-            stages += 1
-            adaptive_test(mid + 1, end)
-
-        num_tests += 1
-
-    adaptive_test(0, N - 1)
-    ###################################################
-
-
-
-    return num_tests,stages
+    num_tests, stages = binary_splitting(s)[:2]
+    return num_tests, stages
 
 
 def Qtesting2(s):
-    '''
-    s(np.array): binary string of infection status
-    '''
     num_tests = 0
     stages = 0
-    ###################################################
-    N = len(s)
-    infected = []
-
-    def adaptive_test(start, end):
-        nonlocal num_tests, stages
-        if start == end:
-            if s[start] == 1:
-                infected.append(start)
-            return
-
-        mid = (start + end) // 2
-        left_count = sum(s[start:mid+1])
-        right_count = sum(s[mid+1:end+1])
-
-        if left_count > 0:
-            stages += 1
-            adaptive_test(start, mid)
-        if right_count > 0:
-            stages += 1
-            adaptive_test(mid+1, end)
-
-        num_tests += 1
-
-    adaptive_test(0, N-1)
-
-    ###################################################
+    num_tests, stages = diag_splitting(s)
+    return num_tests, stages
 
 
 
-    return num_tests,stages
-
-
-
-def Qtesting1_comm_aware(s,communities):
-    '''
-    s(np.array): binary string of infection status
-    communities(list): the community information
-    '''
+def Qtesting1_comm_aware(s, communities):
     num_tests = 0
     stages = 0
-    ###################################################
-    def adaptive_test(start, end):
-        nonlocal num_tests, stages
-        if start == end:
-            if s[start] == 1:
-                return
-            return
-
-        mid = (start + end) // 2
-        left_count = sum(s[start:mid+1])
-        right_count = sum(s[mid+1:end+1])
-
-        if left_count > 0:
-            stages += 1
-            adaptive_test(start, mid)
-        if right_count > 0:
-            stages += 1
-            adaptive_test(mid+1, end)
-
-        num_tests += 1
-
     for community in communities:
-        adaptive_test(community[0], community[-1])
+        num_tests_c, stages_c = binary_splitting(s[community])[:2]
+        num_tests += num_tests_c
+        stages = max(stages, stages_c)
+    return num_tests, stages
 
-    ###################################################
-
-
-
-    return num_tests,stages
-
-def Qtesting2_comm_aware(s,communities):
-    '''
-    s(np.array): binary string of infection status
-    communities(list): the community information
-    '''
+def Qtesting2_comm_aware(s, communities):
     num_tests = 0
     stages = 0
-    ###################################################
-    def adaptive_test(start, end):
-        nonlocal num_tests, stages
-        if start == end:
-            if s[start] == 1:
-                return
-            return
-
-        mid = (start + end) // 2
-        left_count = sum(s[start:mid+1])
-        right_count = sum(s[mid+1:end+1])
-
-        if left_count > 0:
-            stages += 1
-            adaptive_test(start, mid)
-        if right_count > 0:
-            stages += 1
-            adaptive_test(mid+1, end)
-
-        num_tests += 1
-
     for community in communities:
-        adaptive_test(community[0], community[-1])
-
-    ###################################################
-
-
-    return num_tests,stages
+        num_tests_c, stages_c = diag_splitting(s[community])
+        num_tests += num_tests_c
+        stages = max(stages, stages_c)
+    return num_tests, stages
