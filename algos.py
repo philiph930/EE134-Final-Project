@@ -514,10 +514,6 @@ def Qtesting1_comm_aware(s,communities):
     s(np.array): binary string of infection status
     communities(list): the community information
     '''
-    
-def Qtesting1_comm_aware(s, communities):
-    
-def Qtesting1_comm_aware(s, communities):
     num_tests = 0
     num_stages = 0
 
@@ -597,7 +593,7 @@ def identify_comm_infected2(st, infected_comm, portion):
                 individual_index += 1
             index += 1
 
-            tests, stages, arr = Qtesting1(comm_status)
+            tests, stages, arr = Qtesting2(comm_status)
             num_tests += tests
             stage_list.append(stages)
 
@@ -627,7 +623,7 @@ def identify_comm_infected2(st, infected_comm, portion):
                 individual_index += 1
             index += 1
 
-            tests, stages, arr = Qtesting1(comm_status)
+            tests, stages, arr = Qtesting2(comm_status)
             num_tests += tests
             stage_list.append(stages)
 
@@ -657,7 +653,7 @@ def identify_comm_infected2(st, infected_comm, portion):
                 individual_index += 1
             index += 1
 
-            tests, stages, arr = Qtesting1(comm_status)
+            tests, stages, arr = Qtesting2(comm_status)
             num_tests += tests
             stage_list.append(stages)
 
