@@ -146,15 +146,15 @@ def splitting(st, num_infected, prev_infected):
         st[0,1] = st[0,0]
         return num_tests, num_stages
     
-    elif prev_infected == -1:
+    elif prev_infected == -1 or num_infected >= 16:
         k = min(4, int(np.log2(num_infected)))
         k = min(len(st) // 4, k)
         k = max(1, k)
 
-        num_tests += 2 ** k
+        num_tests += 2 ** (k + 1)
         num_stages += 1
         
-        B = np.array_split(st, 2 ** k, axis=0)
+        B = np.array_split(st, 2 ** (k + 1), axis=0)
 
         group_stages = []
 
@@ -287,20 +287,27 @@ def range_testing(st, num_infected, first_iteration):
         B = np.array_split(st, 8, axis=0)
         
         for index, group in enumerate(B):
+            
             if group.shape[0] == 0:
                 continue
             
             num_tests += 1
             group_interval = range_sum(sum(group[:, 0]))
-
+            
             if group_interval == 1:
                 tests, stages = binary_split_T2(group)
                 num_tests += tests
                 num_stages = max(num_stages, stages + 1)
+                
+                while index + 1 < len(B):
+                    index += 1
+                    if B[index].shape[0] != 0:
+                        B[index][:, 1] = 0
                 break
+                
             else:
                 B[index][:, 1] = 0
-    
+            
     elif interval == 2: 
         infected_index = []
         B = np.array_split(st, 8, axis=0)
@@ -367,7 +374,6 @@ def range_testing(st, num_infected, first_iteration):
         
     return num_tests, num_stages
   
-    
 def Qtesting2(s):
     '''
     s(np.array): binary string of infection status
@@ -395,42 +401,163 @@ def Qtesting2(s):
 
     ###################################################
 
+def identify_comm_infected(st, infected_comm, portion):
+    num_tests = 0
+    num_stages = 0
+
+    # If the community is small enough, test each individual
+    if len(infected_comm) <= 6:
+        num_stages += 1
+        for individual in infected_comm:
+            num_tests += 1
+            st[individual, 1] = st[individual, 0]
+        
+        return num_tests, num_stages
+    
+    # Hierarchical testing for larger communities
+    
+    if portion > 0.5:
+        stage_list = []
+        infected_subgroups = np.array_split(infected_comm, 8)
+
+        index = 0
+        for group in infected_subgroups:
+            
+            if len(group) == 0:
+                index += 1
+                continue
+                
+            individual_index = 0
+            comm_status = np.zeros(len(group))
+            for individual in group:
+                comm_status[individual_index] = st[individual, 0]
+                individual_index += 1
+            index += 1
+
+            tests, stages, arr = Qtesting1(comm_status)
+            num_tests += tests
+            stage_list.append(stages)
+
+            arr_index = 0
+            if len(arr) != 0:
+                for individual in group:
+                    st[individual, 1] = arr[arr_index]
+                    arr_index += 1
+
+        num_stages += max(stage_list)
+        
+    elif portion > 0.2 and portion < 0.5:
+        stage_list = []
+        infected_subgroups = np.array_split(infected_comm, 6)
+
+        index = 0
+        for group in infected_subgroups:
+            
+            if len(group) == 0:
+                index += 1
+                continue
+                
+            individual_index = 0
+            comm_status = np.zeros(len(group))
+            for individual in group:
+                comm_status[individual_index] = st[individual, 0]
+                individual_index += 1
+            index += 1
+
+            tests, stages, arr = Qtesting1(comm_status)
+            num_tests += tests
+            stage_list.append(stages)
+
+            arr_index = 0
+            if len(arr) != 0:
+                for individual in group:
+                    st[individual, 1] = arr[arr_index]
+                    arr_index += 1
+
+        num_stages += max(stage_list)
+        
+    else:
+        stage_list = []
+        infected_subgroups = np.array_split(infected_comm, 4)
+
+        index = 0
+        for group in infected_subgroups:
+            
+            if len(group) == 0:
+                index += 1
+                continue
+                
+            individual_index = 0
+            comm_status = np.zeros(len(group))
+            for individual in group:
+                comm_status[individual_index] = st[individual, 0]
+                individual_index += 1
+            index += 1
+
+            tests, stages, arr = Qtesting1(comm_status)
+            num_tests += tests
+            stage_list.append(stages)
+
+            arr_index = 0
+            if len(arr) != 0:
+                for individual in group:
+                    st[individual, 1] = arr[arr_index]
+                    arr_index += 1
+
+        num_stages += max(stage_list) 
+        
+    return tests, stages
+
 def Qtesting1_comm_aware(s,communities):
     '''
     s(np.array): binary string of infection status
     communities(list): the community information
     '''
     num_tests = 0
-    stages = 0
-    ###################################################
-    def adaptive_test(start, end):
-        nonlocal num_tests, stages
-        if start == end:
-            if s[start] == 1:
-                return
-            return
+    num_stages = 0
 
-        mid = (start + end) // 2
-        left_count = sum(s[start:mid+1])
-        right_count = sum(s[mid+1:end+1])
-
-        if left_count > 0:
-            stages += 1
-            adaptive_test(start, mid)
-        if right_count > 0:
-            stages += 1
-            adaptive_test(mid+1, end)
-
-        num_tests += 1
-
+    st = np.zeros((len(s), 2))
+    st[:, 0] = s
+    st[:, 1] = np.nan
+    
+    if st.shape[0] == 0:
+        return 0, 0, st[:, 1]
+    
+    num_stages += 1
+    infected_communities = []
+    infected_portion_list = []
+    infected_portion = 0
+    
     for community in communities:
-        adaptive_test(community[0], community[-1])
+        infected = 0
+        num_tests += 1
+        for individual in community:
+            if st[individual, 0] == 1:
+                infected_portion += 1
+                infected = 1
+                break
+                
+        infected_portion = infected_portion / len(community)
+        
+        if infected == 1:
+            infected_communities.append(community)
+            infected_portion_list.append(infected_portion)
+        else:
+            for individual in community:
+                st[individual, 1] = 0
 
-    ###################################################
+    stages_list = []
+    portion_index = 0
+    for infected_community in infected_communities:
+        tests, stages = identify_comm_infected(st, infected_community, infected_portion_list[portion_index])
+        num_tests += tests
+        portion_index += 1
+        stages_list.append(stages) 
+                
+    if stages_list:
+        num_stages += max(stages_list)
 
-
-
-    return num_tests,stages
+    return num_tests, num_stages, st[:, 1]
 
 def Qtesting2_comm_aware(s,communities):
     '''
@@ -464,6 +591,5 @@ def Qtesting2_comm_aware(s,communities):
         adaptive_test(community[0], community[-1])
 
     ###################################################
-
 
     return num_tests,stages
