@@ -201,7 +201,7 @@ def Qtesting1(s):
     tests, stages = splitting(st, num_infected, -1)
     num_tests += tests
     num_stages += stages
-
+    
     return num_tests, num_stages, st[:,1]
 
 #T2 Testing
@@ -513,6 +513,8 @@ def Qtesting1_comm_aware(s,communities):
     s(np.array): binary string of infection status
     communities(list): the community information
     '''
+    
+def Qtesting1_comm_aware(s, communities):
     num_tests = 0
     num_stages = 0
 
@@ -666,11 +668,7 @@ def identify_comm_infected2(st, infected_comm, portion):
         
     return tests, stages
 
-def Qtesting2_comm_aware(s,communities):
-    '''
-    s(np.array): binary string of infection status
-    communities(list): the community information
-    '''
+def Qtesting2_comm_aware(s, communities):
     num_tests = 0
     num_stages = 0
 
