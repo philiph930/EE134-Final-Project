@@ -681,14 +681,14 @@ def Qtesting2_comm_aware(s, communities):
     num_stages += 1
     infected_communities = []
     infected_range_list = []
-    infected_portion = 0
+    infected_range = 0
     
     for community in communities:
         infected = 0
         num_tests += 1
         for individual in community:
             if st[individual, 0] == 1:
-                infected_portion += 1
+                infected_range += 1
                 infected = 1
                 break
                 
