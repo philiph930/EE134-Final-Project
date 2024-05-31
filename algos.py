@@ -560,7 +560,7 @@ def Qtesting1_comm_aware(s,communities):
 
     return num_tests, num_stages, st[:, 1]
 
-def identify_comm_infected2(st, infected_comm, portion):
+def identify_comm_infected2(st, infected_comm, range):
     num_tests = 0
     num_stages = 0
 
@@ -575,7 +575,7 @@ def identify_comm_infected2(st, infected_comm, portion):
     
     # Hierarchical testing for larger communities
     
-    if portion > 0.5:
+    if len(infected_comm) < (2**(range + 1)) and range != 4:
         stage_list = []
         infected_subgroups = np.array_split(infected_comm, 8)
 
@@ -605,7 +605,7 @@ def identify_comm_infected2(st, infected_comm, portion):
 
         num_stages += max(stage_list)
         
-    elif portion > 0.2 and portion < 0.5:
+    elif len(infected_comm) < (2**(range + 2)) and range != 4:
         stage_list = []
         infected_subgroups = np.array_split(infected_comm, 6)
 
@@ -680,7 +680,7 @@ def Qtesting2_comm_aware(s, communities):
     
     num_stages += 1
     infected_communities = []
-    infected_portion_list = []
+    infected_range_list = []
     infected_portion = 0
     
     for community in communities:
@@ -692,21 +692,21 @@ def Qtesting2_comm_aware(s, communities):
                 infected = 1
                 break
                 
-        infected_portion = infected_portion / len(community)
+        infected_range = range_sum(infected_range)
         
         if infected == 1:
             infected_communities.append(community)
-            infected_portion_list.append(infected_portion)
+            infected_range_list.append(infected_range)
         else:
             for individual in community:
                 st[individual, 1] = 0
 
     stages_list = []
-    portion_index = 0
+    range_index = 0
     for infected_community in infected_communities:
-        tests, stages = identify_comm_infected2(st, infected_community, infected_portion_list[portion_index])
+        tests, stages = identify_comm_infected2(st, infected_community, infected_range_list[range_index])
         num_tests += tests
-        portion_index += 1
+        range_index += 1
         stages_list.append(stages) 
                 
     if stages_list:
