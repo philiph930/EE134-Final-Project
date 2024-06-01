@@ -55,6 +55,55 @@ def binary_splitting(s):
     assert sum(st[:,0]!=st[:,1])==0
     return nums,stages, st[:,1]
 
+def _binary_splitting_parallel(st):
+    if st.shape[0] == 0:
+        return 0,0
+    
+    nums = 0
+    stages = 0
+    # flag = sum(st[:,0])>0
+    if len(st[:,0])==1:
+        st[0,1] = st[0,0]
+        return nums,stages
+    
+    nums += 2
+    stages += 1
+    B1, B2 = np.array_split(st, 2,axis=0)
+    flag1 = sum(B1[:,0])>0
+    flag2 = sum(B2[:,0])>0
+    if flag1 and flag2:
+        n1,s1 = _binary_splitting_parallel(B1)
+        n2,s2 = _binary_splitting_parallel(B2)
+        nums += n1+n2
+        stages += max(s1,s2)
+    elif flag1:
+        n1,s1 = _binary_splitting_parallel(B1)
+        nums += n1
+        stages += s1
+        B2[:,1] = 0
+    elif flag2:
+        n2,s2 = _binary_splitting_parallel(B2)
+        nums += n2
+        stages += s2
+        B1[:,1] = 0
+    else:
+        B1[:,1] = 0
+        B2[:,1] = 0
+
+    return nums,stages
+
+def binary_splitting_parallel(s):
+    # modified bs
+    # s: 1-d array the infectious status
+    st = np.zeros((len(s),2))
+    st[:,0] = s
+    st[:,1] = np.nan
+    
+    nums,stages = _binary_splitting_parallel(st)
+    stages += 1
+    assert sum(st[:,0]!=st[:,1])==0
+    return nums,stages, st[:,1]
+
 # diag
 def diagalg_iter(s):
     # s(np.array): binary string of infection status
@@ -145,6 +194,10 @@ def splitting(st, num_infected, prev_infected):
             num_tests += 1
         st[0,1] = st[0,0]
         return num_tests, num_stages
+    
+    elif num_infected == 0 and prev_infected == -1:
+        num_tests += 1
+        st[:,1] = st[:,0]
     
     elif prev_infected == -1 or num_infected >= 16:
         k = min(4, int(np.log2(num_infected)))
@@ -558,7 +611,7 @@ def Qtesting1_comm_aware(s,communities):
     if stages_list:
         num_stages += max(stages_list)
 
-    return num_tests, num_stages, st[:, 1]
+    return num_tests, num_stages, st[:,1]
 
 def identify_comm_infected2(st, infected_comm, range):
     num_tests = 0
@@ -712,4 +765,4 @@ def Qtesting2_comm_aware(s, communities):
     if stages_list:
         num_stages += max(stages_list)
 
-    return num_tests, num_stages, st[:, 1]
+    return num_tests, num_stages, st[:,1]
